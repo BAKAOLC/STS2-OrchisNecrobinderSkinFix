@@ -1,6 +1,7 @@
 using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Modding;
 using STS2OrchisNecrobinderSkinFix.Patches;
+using STS2OrchisNecrobinderSkinFix.Settings;
 using STS2RitsuLib;
 using STS2RitsuLib.Patching.Core;
 
@@ -21,6 +22,9 @@ public static class Main
 
         try
         {
+            FeatureSettingsRegistration.RegisterData();
+            FeatureSettingsRegistration.RegisterSettings();
+
             var patcher = RitsuLibFramework.CreatePatcher(Const.ModId, "main");
             RegisterStaticPatches(patcher);
 
@@ -33,6 +37,7 @@ public static class Main
             }
 
             OrchisPlayAnimationPatch.ApplyDynamic(patcher);
+            OrchisFeatureGatePatch.ApplyDynamic(patcher);
 
             IsModActive = true;
             Logger.Info("Mod initialization complete - Mod is now ACTIVE");
@@ -49,8 +54,5 @@ public static class Main
         patcher.RegisterPatch<NRelicReadyPatch>();
         patcher.RegisterPatch<NNecrobinderVfxReadyPatch>();
         patcher.RegisterPatch<NNecrobinderVfxUpdateFlameVisibilityPatch>();
-        patcher.RegisterPatch<NRestSiteCharacterReadyContextPatch>();
-        patcher.RegisterPatch<MegaAnimationStateRestSiteDefaultAnimationPatch>();
-        patcher.RegisterPatch<MegaAnimationStateRestSiteDefaultTrackReadPatch>();
     }
 }

@@ -3,6 +3,7 @@ using HarmonyLib;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Relics;
 using STS2OrchisNecrobinderSkinFix.Diagnostics;
+using STS2OrchisNecrobinderSkinFix.Settings;
 using STS2RitsuLib.Patching.Models;
 
 namespace STS2OrchisNecrobinderSkinFix.Patches;
@@ -28,6 +29,8 @@ internal sealed class NRelicReadyPatch : IPatchMethod
 
     private static void Postfix(NRelic __instance)
     {
+        if (!FeatureSettings.Current.RelicIcons) return;
+
         if (ModelField?.GetValue(__instance) is not RelicModel model)
         {
             ModelUnsetLog.Info();
