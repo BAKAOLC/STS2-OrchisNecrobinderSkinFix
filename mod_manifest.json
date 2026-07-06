@@ -1,0 +1,22 @@
+{
+  "id": "STS2-OrchisNecrobinderSkinFix",
+  "pck_name": "STS2-OrchisNecrobinderSkinFix",
+  "name": "Orchis Necrobinder Skin Fix",
+  "author": "OLC",
+  "description": "Compatibility fixes for Orchis Necrobinder Skin Mod runtime errors on STS2 0.107/0.108, including relic ready timing, Necrobinder flame VFX node guards, and Spine animation API compatibility.",
+  "version": "0.1.0",
+  "has_pck": false,
+  "has_dll": true,
+  "affects_gameplay": false,
+  "min_game_version": "0.107.0",
+  "dependencies": [
+    {
+      "id": "STS2-RitsuLib",
+      "min_version": "0.4.13"
+    },
+    {
+      "id": "OrchisNecrobinderSkinMod",
+      "min_version": "1.0.0"
+    }
+  ]
+}
