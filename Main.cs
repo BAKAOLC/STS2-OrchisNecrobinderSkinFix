@@ -29,6 +29,7 @@ public static class Main
             RegisterStaticPatches(patcher);
 
             OrchisRelicReadyPatchCleanup.RemoveUnsafePostfix();
+            OrchisRestSitePatchCleanup.RemoveOriginalPostfixes();
 
             if (!RitsuLibFramework.ApplyRequiredPatcher(patcher, () => IsModActive = false))
             {
@@ -54,5 +55,6 @@ public static class Main
         patcher.RegisterPatch<NRelicReadyPatch>();
         patcher.RegisterPatch<NNecrobinderVfxReadyPatch>();
         patcher.RegisterPatch<NNecrobinderVfxUpdateFlameVisibilityPatch>();
+        patcher.RegisterPatch<NRestSiteCharacterReadyPatch>();
     }
 }

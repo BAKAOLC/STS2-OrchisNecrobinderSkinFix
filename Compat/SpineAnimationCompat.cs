@@ -1,4 +1,6 @@
+using System.Reflection;
 using Godot;
+using HarmonyLib;
 using MegaCrit.Sts2.Core.Bindings.MegaSpine;
 using MegaCrit.Sts2.Core.Helpers;
 
@@ -9,6 +11,11 @@ internal static class SpineAnimationCompat
     private static readonly string[] OvergrowthAnimationCandidates = ["overgrowth_loop", "overgrowth"];
     private static readonly string[] HiveAnimationCandidates = ["hive_loop", "hive"];
     private static readonly string[] GloryAnimationCandidates = ["glory_loop", "glory"];
+
+    private static readonly MethodInfo? SetAnimationMethod = AccessTools.DeclaredMethod(
+        typeof(MegaAnimationState),
+        nameof(MegaAnimationState.SetAnimation),
+        [typeof(string), typeof(bool), typeof(int)]);
 
     public static void PlayAnimation(
         Node2D? spineNode,
@@ -21,27 +28,24 @@ internal static class SpineAnimationCompat
         if (spineNode == null || !string.Equals(spineNode.GetClass(), "SpineSprite", StringComparison.Ordinal)) return;
 
         var sprite = new MegaSprite(spineNode);
-        if (!HasAnimation(spineNode, sprite, animationName))
-        {
-            if (logIfMissing) Main.Logger.Warn($"Animation '{animationName}' was not found on '{spineNode.Name}'.");
-
-            return;
-        }
-
         spineNode.RunWhenSpineReady(sprite, animationState =>
         {
-            using var nativeTrackEntry = animationState.BoundObject.Call("set_animation", animationName, loop, trackId);
-            if (!randomizeTrackTime) return;
-
-            using var returnedTrackEntry = TryCreateTrackEntry(nativeTrackEntry);
-            if (returnedTrackEntry != null)
+            try
             {
-                RandomizeTrackTime(returnedTrackEntry);
-                return;
-            }
+                if (!HasAnimation(spineNode, sprite, animationName))
+                {
+                    if (logIfMissing)
+                        Main.Logger.Warn($"Animation '{animationName}' was not found on '{spineNode.Name}'.");
 
-            using var currentTrackEntry = animationState.GetCurrent(trackId);
-            if (currentTrackEntry != null) RandomizeTrackTime(currentTrackEntry);
+                    return;
+                }
+
+                PlayAnimationWhenReady(animationState, animationName, loop, randomizeTrackTime, trackId);
+            }
+            finally
+            {
+                DisposeIfSupported(animationState);
+            }
         });
     }
 
@@ -50,14 +54,24 @@ internal static class SpineAnimationCompat
         if (spineNode == null || !string.Equals(spineNode.GetClass(), "SpineSprite", StringComparison.Ordinal)) return;
 
         var sprite = new MegaSprite(spineNode);
-        var animationName = FindAnimationName(spineNode, sprite, animationCandidates);
-        if (animationName == null)
+        spineNode.RunWhenSpineReady(sprite, animationState =>
         {
-            Main.Logger.Warn($"No playable animation was found on '{spineNode.Name}'.");
-            return;
-        }
+            try
+            {
+                var animationName = FindAnimationName(spineNode, sprite, animationCandidates);
+                if (animationName == null)
+                {
+                    Main.Logger.Warn($"No playable animation was found on '{spineNode.Name}'.");
+                    return;
+                }
 
-        PlayAnimation(spineNode, animationName, true, false, 0, true);
+                PlayAnimationWhenReady(animationState, animationName, true, false, 0);
+            }
+            finally
+            {
+                DisposeIfSupported(animationState);
+            }
+        });
     }
 
     public static void PlayRestSiteAnimation(Node2D? spineNode, int actIndex)
@@ -65,21 +79,57 @@ internal static class SpineAnimationCompat
         if (spineNode == null || !string.Equals(spineNode.GetClass(), "SpineSprite", StringComparison.Ordinal)) return;
 
         var sprite = new MegaSprite(spineNode);
-        var animationName = FindRestSiteAnimationName(spineNode, sprite, actIndex);
-        if (animationName == null)
+        spineNode.RunWhenSpineReady(sprite, animationState =>
         {
-            Main.Logger.Warn($"No rest site animation was found on '{spineNode.Name}' for act index {actIndex}.");
-            return;
-        }
+            try
+            {
+                var animationName = FindRestSiteAnimationName(spineNode, sprite, actIndex);
+                if (animationName == null)
+                {
+                    Main.Logger.Warn($"No rest site animation was found on '{spineNode.Name}' for act index {actIndex}.");
+                    return;
+                }
 
-        PlayAnimation(spineNode, animationName, true, true, 0, true);
+                PlayAnimationWhenReady(animationState, animationName, true, true, 0);
+            }
+            finally
+            {
+                DisposeIfSupported(animationState);
+            }
+        });
     }
 
-    private static MegaTrackEntry? TryCreateTrackEntry(Variant nativeTrackEntry)
+    private static void PlayAnimationWhenReady(
+        MegaAnimationState animationState,
+        string animationName,
+        bool loop,
+        bool randomizeTrackTime,
+        int trackId)
     {
-        return nativeTrackEntry.VariantType == Variant.Type.Object && nativeTrackEntry.AsGodotObject() != null
-            ? new MegaTrackEntry(nativeTrackEntry)
-            : null;
+        var setAnimation = SetAnimationMethod ??
+                           throw new MissingMethodException(typeof(MegaAnimationState).FullName,
+                               nameof(MegaAnimationState.SetAnimation));
+        object? returnedTrackEntry = null;
+        MegaTrackEntry? currentTrackEntry = null;
+        try
+        {
+            returnedTrackEntry = setAnimation.Invoke(animationState, [animationName, loop, trackId]);
+            if (!randomizeTrackTime) return;
+
+            if (returnedTrackEntry is MegaTrackEntry legacyTrackEntry)
+            {
+                RandomizeTrackTime(legacyTrackEntry);
+                return;
+            }
+
+            currentTrackEntry = animationState.GetCurrent(trackId);
+            if (currentTrackEntry != null) RandomizeTrackTime(currentTrackEntry);
+        }
+        finally
+        {
+            DisposeIfSupported(currentTrackEntry);
+            DisposeIfSupported(returnedTrackEntry);
+        }
     }
 
     private static void RandomizeTrackTime(MegaTrackEntry trackEntry)
@@ -91,7 +141,7 @@ internal static class SpineAnimationCompat
     {
         try
         {
-            return sprite.HasAnimation(animationName);
+            return GetAnimationNames(spineNode, sprite).Contains(animationName, StringComparer.Ordinal);
         }
         catch (Exception ex)
         {
@@ -141,15 +191,29 @@ internal static class SpineAnimationCompat
 
     private static IReadOnlyList<string> GetAnimationNames(Node2D spineNode, MegaSprite sprite)
     {
+        MegaSkeleton? skeleton = null;
+        MegaSkeletonDataResource? skeletonData = null;
         try
         {
-            return sprite.GetSkeleton()?.GetData().GetAnimationNames() ?? [];
+            skeleton = sprite.GetSkeleton();
+            skeletonData = skeleton?.GetData();
+            return skeletonData?.GetAnimationNames() ?? [];
         }
         catch (Exception ex)
         {
             Main.Logger.Warn($"Failed to read animation list from '{spineNode.Name}': {ex.Message}");
             return [];
         }
+        finally
+        {
+            DisposeIfSupported(skeletonData);
+            DisposeIfSupported(skeleton);
+        }
+    }
+
+    private static void DisposeIfSupported(object? value)
+    {
+        if (value is IDisposable disposable) disposable.Dispose();
     }
 
     private static string[] GetRestSiteAnimationCandidates(int actIndex)

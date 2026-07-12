@@ -1,7 +1,6 @@
 using System.Reflection.Emit;
 using Godot;
 using HarmonyLib;
-using MegaCrit.Sts2.Core.Nodes.RestSite;
 using MegaCrit.Sts2.Core.Nodes.Screens.Shops;
 using STS2OrchisNecrobinderSkinFix.Compat;
 using STS2OrchisNecrobinderSkinFix.Diagnostics;
@@ -17,9 +16,6 @@ internal static class OrchisPlayAnimationPatch
     private const string MerchantCharacterReadyPatchTypeName =
         "OrchisNecrobinderSkinMod.Scripts.Entry+MerchantCharacterReadyPatch";
 
-    private const string RestSiteCharacterReadyPatchTypeName =
-        "OrchisNecrobinderSkinMod.Scripts.Entry+RestSiteCharacterReadyPatch";
-
     private static readonly LogLimiter SuppressedFailureLog =
         new("Suppressed Orchis animation compatibility patch failure");
 
@@ -31,8 +27,6 @@ internal static class OrchisPlayAnimationPatch
         if (entryType != null) AddPlayLoopingAnimationPatch(builder, entryType);
 
         AddMerchantCharacterReadyPatch(builder);
-        AddRestSiteCharacterReadyPatch(builder);
-
         if (builder.Patches.Count == 0)
         {
             Main.Logger.Warn("No Orchis animation compatibility patch targets were found.");
@@ -83,27 +77,6 @@ internal static class OrchisPlayAnimationPatch
             patchId: "orchis_merchant_ready_animation_compat");
     }
 
-    private static void AddRestSiteCharacterReadyPatch(DynamicPatchBuilder builder)
-    {
-        var targetType = AccessTools.TypeByName(RestSiteCharacterReadyPatchTypeName);
-        var target = targetType == null
-            ? null
-            : AccessTools.DeclaredMethod(targetType, "Postfix", [typeof(NRestSiteCharacter)]);
-        if (target == null)
-        {
-            Main.Logger.Warn($"Optional patch target '{RestSiteCharacterReadyPatchTypeName}.Postfix' was not found.");
-            return;
-        }
-
-        builder.Add(
-            target,
-            transpiler: DynamicPatchBuilder.FromMethod(typeof(OrchisPlayAnimationPatch),
-                nameof(AnimationCallTranspiler)),
-            isCritical: false,
-            description: "Replace Orchis rest-site animation calls with 0.107/0.108 compatible calls",
-            patchId: "orchis_rest_site_ready_animation_compat");
-    }
-
     private static bool PlayLoopingAnimationPrefix(Node2D? spineNode, string[] animationCandidates)
     {
         try
@@ -127,26 +100,14 @@ internal static class OrchisPlayAnimationPatch
                 entryType,
                 "PlayAnimation",
                 [typeof(Node2D), typeof(string), typeof(bool), typeof(bool), typeof(int), typeof(bool)]);
-        var orchisPlayRestSiteAnimation = entryType == null
-            ? null
-            : AccessTools.DeclaredMethod(entryType, "PlayRestSiteAnimation", [typeof(Node2D), typeof(int)]);
         var compatiblePlayAnimation =
             AccessTools.DeclaredMethod(typeof(OrchisPlayAnimationPatch), nameof(PlayAnimationCompat));
-        var compatiblePlayRestSiteAnimation =
-            AccessTools.DeclaredMethod(typeof(OrchisPlayAnimationPatch), nameof(PlayRestSiteAnimationCompat));
 
         foreach (var instruction in instructions)
         {
             if (orchisPlayAnimation != null && instruction.Calls(orchisPlayAnimation))
             {
                 yield return CopyMetadata(instruction, new CodeInstruction(OpCodes.Call, compatiblePlayAnimation));
-                continue;
-            }
-
-            if (orchisPlayRestSiteAnimation != null && instruction.Calls(orchisPlayRestSiteAnimation))
-            {
-                yield return CopyMetadata(instruction,
-                    new CodeInstruction(OpCodes.Call, compatiblePlayRestSiteAnimation));
                 continue;
             }
 
@@ -180,15 +141,4 @@ internal static class OrchisPlayAnimationPatch
         }
     }
 
-    private static void PlayRestSiteAnimationCompat(Node2D? spineNode, int actIndex)
-    {
-        try
-        {
-            SpineAnimationCompat.PlayRestSiteAnimation(spineNode, actIndex);
-        }
-        catch (Exception ex)
-        {
-            SuppressedFailureLog.Info(ex.Message);
-        }
-    }
 }
