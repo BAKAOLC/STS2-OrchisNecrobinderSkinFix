@@ -34,16 +34,31 @@ internal sealed class NNecrobinderVfxReadyPatch : IPatchMethod
         return false;
     }
 
-    private static Exception? Finalizer(Exception? __exception)
+    private static Exception? Finalizer(
+        NNecrobinderVfx __instance,
+        Exception? __exception)
     {
         if (__exception == null) return null;
 
-        if (__exception is InvalidOperationException or NullReferenceException)
+        if (__exception is InvalidOperationException or NullReferenceException &&
+            MissingHead(__instance))
         {
             SuppressedExceptionLog.Info(__exception.Message);
             return null;
         }
 
         return __exception;
+    }
+
+    private static bool MissingHead(NNecrobinderVfx instance)
+    {
+        try
+        {
+            return instance.GetParent<Node2D>()?.GetNodeOrNull<Node2D>("HeadBoneNode") == null;
+        }
+        catch
+        {
+            return true;
+        }
     }
 }

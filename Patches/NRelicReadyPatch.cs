@@ -16,14 +16,14 @@ internal sealed class NRelicReadyPatch : IPatchMethod
         new("Skipped replacement relic outline update because NRelic.Model is not set");
 
     public static string PatchId => "orchis_safe_relic_ready_outline";
-    public static bool IsCritical => false;
+    public static bool IsCritical => true;
     public static string Description => "Safely update Orchis replacement relic outlines after NRelic._Ready";
 
     public static ModPatchTarget[] GetTargets()
     {
         return
         [
-            new ModPatchTarget(typeof(NRelic), nameof(NRelic._Ready), Type.EmptyTypes, true)
+            new ModPatchTarget(typeof(NRelic), nameof(NRelic._Ready), Type.EmptyTypes)
         ];
     }
 

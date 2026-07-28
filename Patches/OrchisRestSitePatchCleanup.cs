@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Nodes.RestSite;
 
 namespace STS2OrchisNecrobinderSkinFix.Patches;
@@ -18,7 +19,7 @@ internal static class OrchisRestSitePatchCleanup
             AccessTools.DeclaredMethod(
                 typeof(NRestSiteCharacter),
                 nameof(NRestSiteCharacter.Create),
-                [typeof(MegaCrit.Sts2.Core.Entities.Players.Player), typeof(int)]),
+                [typeof(Player), typeof(int)]),
             CreatePatchTypeName,
             "NRestSiteCharacter.Create");
 

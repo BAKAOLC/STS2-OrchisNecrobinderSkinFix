@@ -2,11 +2,9 @@ using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Models;
-using MegaCrit.Sts2.Core.Models.Characters;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.Screens.CharacterSelect;
 using MegaCrit.Sts2.Core.Nodes.Screens.GameOverScreen;
-using MegaCrit.Sts2.Core.Nodes.Screens.Shops;
 using STS2OrchisNecrobinderSkinFix.Settings;
 using STS2RitsuLib.Patching.Builders;
 using STS2RitsuLib.Patching.Core;
@@ -24,9 +22,6 @@ internal static class OrchisFeatureGatePatch
 
     private const string CharacterSelectScreenPatchTypeName =
         "OrchisNecrobinderSkinMod.Scripts.Entry+CharacterSelectScreenPatch";
-
-    private const string MerchantCharacterReadyPatchTypeName =
-        "OrchisNecrobinderSkinMod.Scripts.Entry+MerchantCharacterReadyPatch";
 
     private const string CharacterModelCreateVisualsPatchTypeName =
         "OrchisNecrobinderSkinMod.Scripts.Entry+CharacterModelCreateVisualsPatch";
@@ -92,14 +87,6 @@ internal static class OrchisFeatureGatePatch
             [typeof(NCharacterSelectScreen), typeof(NCharacterSelectButton), typeof(CharacterModel)],
             nameof(CharacterSelectCompanionPrefix),
             patchId: "orchis_character_select_companion_feature_gate");
-
-        AddOptional(
-            builder,
-            AccessTools.TypeByName(MerchantCharacterReadyPatchTypeName),
-            "Postfix",
-            [typeof(NMerchantCharacter)],
-            nameof(MerchantCharacterReadyPrefix),
-            patchId: "orchis_merchant_character_feature_gate");
 
         AddOptional(
             builder,
@@ -215,11 +202,6 @@ internal static class OrchisFeatureGatePatch
         return FeatureSettings.Current.CharacterSelectCompanionModels;
     }
 
-    private static bool MerchantCharacterReadyPrefix()
-    {
-        return FeatureSettings.Current.NecrobinderMerchantModel;
-    }
-
     private static bool FakeMerchantCharacterVisualsPrefix()
     {
         return FeatureSettings.Current.NecrobinderFakeMerchantModel;
@@ -247,5 +229,4 @@ internal static class OrchisFeatureGatePatch
     {
         return FeatureSettings.Current.OstyCombatModel;
     }
-
 }

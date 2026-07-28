@@ -28,14 +28,15 @@ public static class Main
             var patcher = RitsuLibFramework.CreatePatcher(Const.ModId, "main");
             RegisterStaticPatches(patcher);
 
-            OrchisRelicReadyPatchCleanup.RemoveUnsafePostfix();
-            OrchisRestSitePatchCleanup.RemoveOriginalPostfixes();
-
             if (!RitsuLibFramework.ApplyRequiredPatcher(patcher, () => IsModActive = false))
             {
                 Logger.Error("Mod initialization failed: patch application failed");
                 return;
             }
+
+            OrchisRelicReadyPatchCleanup.RemoveUnsafePostfix();
+            OrchisRestSitePatchCleanup.RemoveOriginalPostfixes();
+            OrchisMerchantPatchCleanup.RemoveOriginalPostfix();
 
             OrchisPlayAnimationPatch.ApplyDynamic(patcher);
             OrchisFeatureGatePatch.ApplyDynamic(patcher);
@@ -56,5 +57,6 @@ public static class Main
         patcher.RegisterPatch<NNecrobinderVfxReadyPatch>();
         patcher.RegisterPatch<NNecrobinderVfxUpdateFlameVisibilityPatch>();
         patcher.RegisterPatch<NRestSiteCharacterReadyPatch>();
+        patcher.RegisterPatch<NMerchantRoomAfterRoomIsLoadedPatch>();
     }
 }

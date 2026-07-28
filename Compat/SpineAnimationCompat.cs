@@ -30,22 +30,15 @@ internal static class SpineAnimationCompat
         var sprite = new MegaSprite(spineNode);
         spineNode.RunWhenSpineReady(sprite, animationState =>
         {
-            try
+            if (!HasAnimation(spineNode, sprite, animationName))
             {
-                if (!HasAnimation(spineNode, sprite, animationName))
-                {
-                    if (logIfMissing)
-                        Main.Logger.Warn($"Animation '{animationName}' was not found on '{spineNode.Name}'.");
+                if (logIfMissing)
+                    Main.Logger.Warn($"Animation '{animationName}' was not found on '{spineNode.Name}'.");
 
-                    return;
-                }
+                return;
+            }
 
-                PlayAnimationWhenReady(animationState, animationName, loop, randomizeTrackTime, trackId);
-            }
-            finally
-            {
-                DisposeIfSupported(animationState);
-            }
+            PlayAnimationWhenReady(animationState, animationName, loop, randomizeTrackTime, trackId);
         });
     }
 
@@ -56,21 +49,14 @@ internal static class SpineAnimationCompat
         var sprite = new MegaSprite(spineNode);
         spineNode.RunWhenSpineReady(sprite, animationState =>
         {
-            try
+            var animationName = FindAnimationName(spineNode, sprite, animationCandidates);
+            if (animationName == null)
             {
-                var animationName = FindAnimationName(spineNode, sprite, animationCandidates);
-                if (animationName == null)
-                {
-                    Main.Logger.Warn($"No playable animation was found on '{spineNode.Name}'.");
-                    return;
-                }
+                Main.Logger.Warn($"No playable animation was found on '{spineNode.Name}'.");
+                return;
+            }
 
-                PlayAnimationWhenReady(animationState, animationName, true, false, 0);
-            }
-            finally
-            {
-                DisposeIfSupported(animationState);
-            }
+            PlayAnimationWhenReady(animationState, animationName, true, false, 0);
         });
     }
 
@@ -81,21 +67,15 @@ internal static class SpineAnimationCompat
         var sprite = new MegaSprite(spineNode);
         spineNode.RunWhenSpineReady(sprite, animationState =>
         {
-            try
+            var animationName = FindRestSiteAnimationName(spineNode, sprite, actIndex);
+            if (animationName == null)
             {
-                var animationName = FindRestSiteAnimationName(spineNode, sprite, actIndex);
-                if (animationName == null)
-                {
-                    Main.Logger.Warn($"No rest site animation was found on '{spineNode.Name}' for act index {actIndex}.");
-                    return;
-                }
+                Main.Logger.Warn(
+                    $"No rest site animation was found on '{spineNode.Name}' for act index {actIndex}.");
+                return;
+            }
 
-                PlayAnimationWhenReady(animationState, animationName, true, true, 0);
-            }
-            finally
-            {
-                DisposeIfSupported(animationState);
-            }
+            PlayAnimationWhenReady(animationState, animationName, true, true, 0);
         });
     }
 
@@ -141,7 +121,7 @@ internal static class SpineAnimationCompat
     {
         try
         {
-            return GetAnimationNames(spineNode, sprite).Contains(animationName, StringComparer.Ordinal);
+            return sprite.HasAnimation(animationName);
         }
         catch (Exception ex)
         {
@@ -192,12 +172,15 @@ internal static class SpineAnimationCompat
     private static IReadOnlyList<string> GetAnimationNames(Node2D spineNode, MegaSprite sprite)
     {
         MegaSkeleton? skeleton = null;
-        MegaSkeletonDataResource? skeletonData = null;
         try
         {
             skeleton = sprite.GetSkeleton();
-            skeletonData = skeleton?.GetData();
-            return skeletonData?.GetAnimationNames() ?? [];
+            var skeletonData = skeleton?.GetData();
+            if (skeletonData == null) return [];
+
+            var animationNames = skeletonData.GetAnimationNames();
+            GC.KeepAlive(skeletonData);
+            return animationNames;
         }
         catch (Exception ex)
         {
@@ -206,7 +189,6 @@ internal static class SpineAnimationCompat
         }
         finally
         {
-            DisposeIfSupported(skeletonData);
             DisposeIfSupported(skeleton);
         }
     }

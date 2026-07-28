@@ -41,11 +41,13 @@ internal sealed class NNecrobinderVfxUpdateFlameVisibilityPatch : IPatchMethod
         return false;
     }
 
-    private static Exception? Finalizer(Exception? __exception)
+    private static Exception? Finalizer(
+        NNecrobinderVfx __instance,
+        Exception? __exception)
     {
         if (__exception == null) return null;
 
-        if (__exception is NullReferenceException)
+        if (__exception is NullReferenceException && !HasValidHeadRef(__instance))
         {
             SuppressedExceptionLog.Info();
             return null;

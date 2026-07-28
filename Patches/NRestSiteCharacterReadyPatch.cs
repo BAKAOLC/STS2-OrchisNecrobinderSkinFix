@@ -23,7 +23,8 @@ internal sealed class NRestSiteCharacterReadyPatch : IPatchMethod
     private static Resource? ostySkeletonData;
 
     public static string PatchId => "orchis_rest_site_ready_replacement";
-    public static bool IsCritical => false;
+    public static bool IsCritical => true;
+
     public static string Description =>
         "Apply Orchis rest-site visuals after vanilla initialization and use version-compatible Spine animation calls";
 
@@ -31,7 +32,7 @@ internal sealed class NRestSiteCharacterReadyPatch : IPatchMethod
     {
         return
         [
-            new ModPatchTarget(typeof(NRestSiteCharacter), nameof(NRestSiteCharacter._Ready), Type.EmptyTypes, true)
+            new ModPatchTarget(typeof(NRestSiteCharacter), nameof(NRestSiteCharacter._Ready), Type.EmptyTypes)
         ];
     }
 
