@@ -7,15 +7,22 @@ namespace STS2OrchisNecrobinderSkinFix.Patches;
 
 internal sealed class NNecrobinderVfxReadyPatch : IPatchMethod
 {
+    private static readonly string[] OriginalScytheParticlePaths =
+    [
+        "ScytheVfxSlot1/ScytheParticles",
+        "ScytheVfxSlot2/ScytheParticles"
+    ];
+
     private static readonly LogLimiter MissingHeadLog =
-        new("Skipped NNecrobinderVfx._Ready because Orchis removed HeadBoneNode before the VFX node initialized");
+        new("Disabled orphaned vanilla Necrobinder VFX because Orchis removed HeadBoneNode before initialization");
 
     private static readonly LogLimiter SuppressedExceptionLog =
         new("Suppressed NNecrobinderVfx._Ready exception");
 
     public static string PatchId => "orchis_necrobinder_vfx_ready_head_guard";
     public static bool IsCritical => false;
-    public static string Description => "Skip Necrobinder flame VFX setup after Orchis removes HeadBoneNode";
+    public static string Description =>
+        "Disable orphaned vanilla Necrobinder particles after Orchis removes HeadBoneNode";
 
     public static ModPatchTarget[] GetTargets()
     {
@@ -30,8 +37,24 @@ internal sealed class NNecrobinderVfxReadyPatch : IPatchMethod
         var parent = __instance.GetParent<Node2D>();
         if (parent?.GetNodeOrNull<Node2D>("HeadBoneNode") != null) return true;
 
+        DisableOriginalScytheParticles(parent);
         MissingHeadLog.Info();
         return false;
+    }
+
+    private static void DisableOriginalScytheParticles(Node2D? parent)
+    {
+        if (parent == null) return;
+
+        foreach (var path in OriginalScytheParticlePaths)
+        {
+            var particles = parent.GetNodeOrNull<GpuParticles2D>(path);
+            if (particles == null) continue;
+
+            particles.Emitting = false;
+            particles.OneShot = true;
+            particles.Visible = false;
+        }
     }
 
     private static Exception? Finalizer(

@@ -4,7 +4,7 @@
   "name": "Orchis Necrobinder Skin Fix",
   "author": "OLC",
   "description": "Compatibility fixes for Orchis Necrobinder Skin Mod on STS2 0.107/0.108, including relic ready timing, Necrobinder flame VFX node guards, Spine animation API compatibility, and safer rest-site skeleton replacement.",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "has_pck": false,
   "has_dll": true,
   "affects_gameplay": false,

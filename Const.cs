@@ -3,7 +3,7 @@ namespace STS2OrchisNecrobinderSkinFix;
 internal static class Const
 {
     public const string ModId = "STS2-OrchisNecrobinderSkinFix";
-    public const string Version = "0.1.3";
+    public const string Version = "0.1.4";
     public const string HarmonyId = "sts2.orchis.necrobinder.skin.fix";
     public const string OrchisHarmonyId = "sts2.orchis.necrobinder.skin.mod";
 }
