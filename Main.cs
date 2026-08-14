@@ -58,5 +58,6 @@ public static class Main
         patcher.RegisterPatch<NNecrobinderVfxUpdateFlameVisibilityPatch>();
         patcher.RegisterPatch<NRestSiteCharacterReadyPatch>();
         patcher.RegisterPatch<NMerchantRoomAfterRoomIsLoadedPatch>();
+        patcher.RegisterPatch<NecrobinderLowHealthAnimatorPatch>();
     }
 }
