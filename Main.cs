@@ -38,6 +38,8 @@ public static class Main
             OrchisRestSitePatchCleanup.RemoveOriginalPostfixes();
             OrchisMerchantPatchCleanup.RemoveOriginalPostfix();
 
+            OrchisPatchRecovery.ApplyDynamic(patcher);
+            OrchisOstyScalingPatch.ApplyDynamic(patcher);
             OrchisPlayAnimationPatch.ApplyDynamic(patcher);
             OrchisFeatureGatePatch.ApplyDynamic(patcher);
 
@@ -59,5 +61,8 @@ public static class Main
         patcher.RegisterPatch<NRestSiteCharacterReadyPatch>();
         patcher.RegisterPatch<NMerchantRoomAfterRoomIsLoadedPatch>();
         patcher.RegisterPatch<NecrobinderLowHealthAnimatorPatch>();
+        patcher.RegisterPatch<OrchisDeferredFeatureGatePatch>();
     }
 }
+
+// ReSharper restore ArrangeNamespaceBody
