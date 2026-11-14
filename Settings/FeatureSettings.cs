@@ -43,6 +43,7 @@ internal static class FeatureSettings
             "ancients" => settings.AncientText,
             "epochs" => settings.EpochText,
             "static_hover_tips" => settings.HoverTipText,
+            "characters" => settings.CharacterText,
             _ => true
         };
     }

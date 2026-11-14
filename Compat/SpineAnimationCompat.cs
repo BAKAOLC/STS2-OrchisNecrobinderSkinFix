@@ -42,24 +42,6 @@ internal static class SpineAnimationCompat
         });
     }
 
-    public static void PlayLoopingAnimation(Node2D? spineNode, params string[] animationCandidates)
-    {
-        if (spineNode == null || !string.Equals(spineNode.GetClass(), "SpineSprite", StringComparison.Ordinal)) return;
-
-        var sprite = new MegaSprite(spineNode);
-        spineNode.RunWhenSpineReady(sprite, animationState =>
-        {
-            var animationName = FindAnimationName(spineNode, sprite, animationCandidates);
-            if (animationName == null)
-            {
-                Main.Logger.Warn($"No playable animation was found on '{spineNode.Name}'.");
-                return;
-            }
-
-            PlayAnimationWhenReady(animationState, animationName, true, false, 0);
-        });
-    }
-
     public static void PlayRestSiteAnimation(Node2D? spineNode, int actIndex)
     {
         if (spineNode == null || !string.Equals(spineNode.GetClass(), "SpineSprite", StringComparison.Ordinal)) return;

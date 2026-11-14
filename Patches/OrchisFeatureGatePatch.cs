@@ -33,9 +33,6 @@ internal static class OrchisFeatureGatePatch
     private const string GameOverScreenMoveCreaturesPatchTypeName =
         "OrchisNecrobinderSkinMod.Scripts.Entry+GameOverScreenMoveCreaturesPatch";
 
-    private const string OstyScaleToSizePatchTypeName =
-        "OrchisNecrobinderSkinMod.Scripts.Entry+OstyScaleToSizePatch";
-
     private const string CardPortraitReplacementPatchTypeName =
         "NecrobinderCardPortraits.NecrobinderCardPortraitsCode.CardPortraitReplacementPatch";
 
@@ -58,6 +55,14 @@ internal static class OrchisFeatureGatePatch
             [typeof(LocString)],
             postfix: nameof(TextShouldReplacePostfix),
             patchId: "orchis_text_replace_feature_gate");
+
+        AddOptional(
+            builder,
+            AccessTools.TypeByName(TextReplacePatchTypeName),
+            "TryGetCharacterText",
+            [typeof(LocString), typeof(string).MakeByRefType()],
+            nameof(CharacterTextPrefix),
+            patchId: "orchis_character_text_feature_gate");
 
         AddOptional(
             builder,
@@ -87,7 +92,7 @@ internal static class OrchisFeatureGatePatch
             builder,
             AccessTools.TypeByName(CharacterSelectScreenPatchTypeName),
             "Postfix",
-            [typeof(NCharacterSelectScreen), typeof(NCharacterSelectButton), typeof(CharacterModel)],
+            [typeof(NCharacterSelectScreen), typeof(object[])],
             nameof(CharacterSelectCompanionPrefix),
             patchId: "orchis_character_select_companion_feature_gate");
 
@@ -106,14 +111,6 @@ internal static class OrchisFeatureGatePatch
             [typeof(NGameOverScreen)],
             nameof(GameOverRestSiteVisualsPrefix),
             patchId: "orchis_game_over_rest_site_feature_gate");
-
-        AddOptional(
-            builder,
-            AccessTools.TypeByName(OstyScaleToSizePatchTypeName),
-            "Prefix",
-            [typeof(NCreature), typeof(float), typeof(double)],
-            nameof(OstyScaleToSizePrefixPatch),
-            patchId: "orchis_osty_scale_feature_gate");
 
         AddOptional(
             builder,
@@ -225,6 +222,16 @@ internal static class OrchisFeatureGatePatch
     }
 
     // ReSharper disable once InconsistentNaming
+    private static bool CharacterTextPrefix(out string __1, ref bool __result)
+    {
+        __1 = string.Empty;
+        if (FeatureSettings.Current.CharacterText) return true;
+
+        __result = false;
+        return false;
+    }
+
+    // ReSharper disable once InconsistentNaming
     private static bool RelicIconReplacementPrefix(RelicModel __0, out Texture2D icon, ref bool __result)
     {
         icon = null!;
@@ -264,15 +271,6 @@ internal static class OrchisFeatureGatePatch
     private static bool GameOverRestSiteVisualsPrefix()
     {
         return FeatureSettings.Current.GameOverRestSiteVisuals;
-    }
-
-    // ReSharper disable once InconsistentNaming
-    private static bool OstyScaleToSizePrefixPatch(ref bool __result)
-    {
-        if (FeatureSettings.Current.OstyCombatModel) return true;
-
-        __result = true;
-        return false;
     }
 
     private static bool ApplyNecrobinderCombatScalePrefix()

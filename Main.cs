@@ -38,9 +38,7 @@ public static class Main
             OrchisRestSitePatchCleanup.RemoveOriginalPostfixes();
             OrchisMerchantPatchCleanup.RemoveOriginalPostfix();
 
-            OrchisPatchRecovery.ApplyDynamic(patcher);
             OrchisOstyScalingPatch.ApplyDynamic(patcher);
-            OrchisPlayAnimationPatch.ApplyDynamic(patcher);
             OrchisFeatureGatePatch.ApplyDynamic(patcher);
 
             IsModActive = true;

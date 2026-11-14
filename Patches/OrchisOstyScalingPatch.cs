@@ -15,11 +15,14 @@ internal static class OrchisOstyScalingPatch
         "res://OrchisNecrobinderSkinMod/animations/monsters/osty/osty_combat_skel_data.tres";
 
     private const string InteropTypeName = "OrchisNecrobinderSkinMod.Scripts.VisualSettingsInterop";
+    private const string UpstreamScalingPatchTypeName =
+        "OrchisNecrobinderSkinMod.Scripts.Entry+ScaleAndPositionOstyPatch";
 
     public static void ApplyDynamic(ModPatcher patcher)
     {
-        var target = AccessTools.DeclaredMethod(typeof(NCreature), "ScaleAndPositionOsty",
-            [typeof(float), typeof(double)]);
+        Type[] parameters = [typeof(float), typeof(double)];
+        var target = AccessTools.DeclaredMethod(typeof(NCreature), "ScaleAndPositionOsty", parameters) ??
+                     AccessTools.DeclaredMethod(typeof(NCreature), "OstyScaleToSize", parameters);
         if (target == null)
             return;
 
@@ -29,6 +32,13 @@ internal static class OrchisOstyScalingPatch
             patchId: "orchis_osty_native_scale_factor");
         if (!patcher.ApplyDynamic(builder))
             throw new InvalidOperationException("Could not apply the Orchis Osty scaling compatibility patch.");
+
+        var upstreamPrefixes = Harmony.GetPatchInfo(target)?.Prefixes
+            .Where(patch => patch.owner == Const.OrchisHarmonyId &&
+                            patch.PatchMethod.DeclaringType?.FullName == UpstreamScalingPatchTypeName)
+            .ToArray() ?? [];
+        var harmony = new Harmony(Const.HarmonyId);
+        foreach (var prefix in upstreamPrefixes) harmony.Unpatch(target, prefix.PatchMethod);
     }
 
     private static List<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)

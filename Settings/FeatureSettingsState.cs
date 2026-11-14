@@ -11,6 +11,7 @@ internal sealed class FeatureSettingsState
     public bool AncientText { get; set; } = true;
     public bool EpochText { get; set; } = true;
     public bool HoverTipText { get; set; } = true;
+    public bool CharacterText { get; set; } = true;
 
     public bool RelicIcons { get; set; } = true;
     public bool CardPortraits { get; set; } = true;

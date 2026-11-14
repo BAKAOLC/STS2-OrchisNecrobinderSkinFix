@@ -41,6 +41,8 @@ internal static class FeatureSettingsRegistration
     private static void ConfigureTextSection(ModSettingsSectionBuilder section)
     {
         section.WithTitle(T("Text replacements", "文本替换"));
+        section.AddToggle("character_text", T("Character text", "角色文本"),
+            Bind(s => s.CharacterText, (s, v) => s.CharacterText = v));
         section.AddToggle("card_text", T("Card text", "卡牌文本"), Bind(s => s.CardText, (s, v) => s.CardText = v));
         section.AddToggle("relic_text", T("Relic text", "遗物文本"), Bind(s => s.RelicText, (s, v) => s.RelicText = v));
         section.AddToggle("power_text", T("Power text", "能力文本"), Bind(s => s.PowerText, (s, v) => s.PowerText = v));
